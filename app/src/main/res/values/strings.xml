@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">ChargeGuard</string>
+    <string name="title_activity_charging_limit_reached">ChargingLimitReached</string>
+</resources>
