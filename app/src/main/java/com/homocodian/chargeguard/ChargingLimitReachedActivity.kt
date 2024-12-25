@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -58,7 +60,9 @@ class ChargingLimitReached : ComponentActivity() {
 
     setContent {
       ChargeGuardTheme {
-        FullScreenAlert()
+        Surface {
+          FullScreenAlert()
+        }
       }
     }
   }
@@ -117,8 +121,15 @@ fun FullScreenAlert() {
 
 }
 
-@Preview
+@Preview(
+  uiMode = Configuration.UI_MODE_NIGHT_YES,
+  name = "DefaultPreviewDark"
+)
+@Preview(
+  uiMode = Configuration.UI_MODE_NIGHT_NO,
+  name = "DefaultPreviewLight"
+)
 @Composable
-fun PreviewAlarm() {
+fun PreviewFullScreenAlert() {
   FullScreenAlert()
 }

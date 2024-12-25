@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <application
         android:name=".ChargeGuardApp"
@@ -37,9 +39,6 @@
             android:showWhenLocked="true"
             android:theme="@style/Theme.ChargeGuard" />
 
-        <service android:name=".service.MonitorChargingStatusService" />
-        <service android:name=".service.MonitorChargingLevelService" />
-
         <receiver
             android:name=".broadcasts.BootReceiver"
             android:enabled="false"
@@ -52,6 +51,13 @@
         <receiver
             android:name=".broadcasts.NotificationDismissedReceiver"
             android:exported="false" />
+
+        <service android:name=".service.MonitorChargingLevelService" android:enabled="true" android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Used for monitoring charging level state of the device." />
+        </service>
+        <service android:name=".service.MonitorChargingStatusService" android:enabled="true" android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Used for monitoring power connection state of the device." />
+        </service>
 
     </application>
 

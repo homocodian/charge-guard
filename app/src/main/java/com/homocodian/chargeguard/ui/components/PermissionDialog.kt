@@ -9,9 +9,10 @@ import androidx.compose.ui.Modifier
 @Composable
 fun PermissionDialog(
     permissionTextProvider: PermissionTextProvider,
+    modifier: Modifier = Modifier,
+    isPermanentlyDeclined: Boolean = false,
     onDismiss: () -> Unit,
     onOkClick: () -> Unit,
-    modifier: Modifier = Modifier
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -21,7 +22,7 @@ fun PermissionDialog(
                 onClick = onOkClick
             ) {
                 Text(
-                    text = "Request"
+                    text = if (isPermanentlyDeclined) "Open Settings" else "Request"
                 )
             }
         },
@@ -29,7 +30,7 @@ fun PermissionDialog(
             Text(text = "Permission required")
         },
         text = {
-            Text(text = permissionTextProvider.getDescription(false))
+            Text(text = permissionTextProvider.getDescription(isPermanentlyDeclined))
         },
         dismissButton = {
             TextButton(

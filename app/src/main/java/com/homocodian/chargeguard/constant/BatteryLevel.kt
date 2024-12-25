@@ -5,5 +5,6 @@ object BatteryLevel {
 
     object DataStore {
         const val BATTERY_LEVEL_TO_MONITOR_KEY = "BATTERY_LEVEL_TO_MONITOR"
+        const val ASKED_NOTIFICATION_COUNT = "ASKED_NOTIFICATION_COUNT"
     }
 }

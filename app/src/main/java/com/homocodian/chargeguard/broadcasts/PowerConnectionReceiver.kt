@@ -28,7 +28,9 @@ class PowerConnectionReceiver : BroadcastReceiver() {
 
     if (!isServiceRunning(context, MonitorChargingLevelService::class.java)) {
       Log.d(TAG, "Starting MonitorChargingLevelService")
-      Intent(context, MonitorChargingLevelService::class.java).also {
+
+      Intent(context.applicationContext, MonitorChargingLevelService::class.java).also {
+        it.action = MonitorChargingLevelService.Action.START.toString()
         context.startService(it)
       }
     } else {
@@ -41,8 +43,10 @@ class PowerConnectionReceiver : BroadcastReceiver() {
     Log.d(TAG, "powerWasDisconnected")
     if (isServiceRunning(context, MonitorChargingLevelService::class.java)) {
       Log.d(TAG, "Stopping MonitorChargingLevelService")
-      Intent(context, MonitorChargingLevelService::class.java).also {
-        context.stopService(it)
+
+      Intent(context.applicationContext, MonitorChargingLevelService::class.java).also {
+        it.action = MonitorChargingLevelService.Action.STOP.toString()
+        context.startService(it)
       }
     } else {
       Log.d(TAG, "powerWasDisconnected: MonitorChargingLevelService already stopped")

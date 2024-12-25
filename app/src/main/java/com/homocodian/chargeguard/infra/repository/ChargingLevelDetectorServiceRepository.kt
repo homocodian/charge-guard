@@ -6,7 +6,6 @@ import android.util.Log
 import com.homocodian.chargeguard.TAG
 import com.homocodian.chargeguard.domain.repository.ServiceRepository
 import com.homocodian.chargeguard.service.MonitorChargingLevelService
-import com.homocodian.chargeguard.service.MonitorChargingStatusService
 import com.homocodian.chargeguard.util.isServiceRunning
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -28,6 +27,7 @@ class ChargingLevelDetectorServiceRepository @Inject constructor(
     }
 
     Intent(appContext, MonitorChargingLevelService::class.java).also {
+      it.action = MonitorChargingLevelService.Action.STOP.toString()
       appContext.startService(it)
     }
   }
@@ -39,7 +39,20 @@ class ChargingLevelDetectorServiceRepository @Inject constructor(
     }
 
     Intent(appContext, MonitorChargingLevelService::class.java).also {
-      appContext.stopService(it)
+      it.action = MonitorChargingLevelService.Action.STOP.toString()
+      appContext.startService(it)
+    }
+  }
+
+  fun restartIfRunning() {
+    if (!isServiceRunning(appContext, MonitorChargingLevelService::class.java)) {
+      Log.d(TAG, "restartIfRunning : Battery charging level detector service already stopped")
+      return
+    }
+
+    Intent(appContext, MonitorChargingLevelService::class.java).also {
+      it.action = MonitorChargingLevelService.Action.RESTART.toString()
+      appContext.startService(it)
     }
   }
 

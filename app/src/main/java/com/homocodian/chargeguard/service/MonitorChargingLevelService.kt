@@ -11,6 +11,7 @@ import com.homocodian.chargeguard.broadcasts.ChargingLevelChangeReceiver
 import com.homocodian.chargeguard.constant.AppNotification
 import com.homocodian.chargeguard.constant.BatteryLevel
 import com.homocodian.chargeguard.infra.repository.PreferenceDataStoreRepository
+import com.homocodian.chargeguard.util.NotificationCreator
 import com.homocodian.chargeguard.util.helper.MediaPlayerHelper
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -37,12 +38,11 @@ class MonitorChargingLevelService : Service() {
         preferenceDataStoreRepository.getInt(BatteryLevel.DataStore.BATTERY_LEVEL_TO_MONITOR_KEY)
           ?: BatteryLevel.DEFAULT_BATTERY_LEVEL_TO_MONITOR
 
-      Log.d(TAG, "onCreate: Batter level $chargingLevelToMonitor")
+      Log.d(TAG, "onCreate: Battery level $chargingLevelToMonitor")
 
       chargingLevelChangeReceiver = ChargingLevelChangeReceiver(chargingLevelToMonitor)
 
       ensureActive()
-
 
       registerReceiver(chargingLevelChangeReceiver, IntentFilter().apply {
         addAction(Intent.ACTION_BATTERY_CHANGED)
@@ -51,6 +51,13 @@ class MonitorChargingLevelService : Service() {
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
+    when (intent?.action) {
+      Action.START.toString() -> start()
+      Action.STOP.toString() -> stop()
+      Action.RESTART.toString() -> restart()
+    }
+
     return super.onStartCommand(intent, flags, startId)
   }
 
@@ -76,4 +83,32 @@ class MonitorChargingLevelService : Service() {
       unregisterReceiver(chargingLevelChangeReceiver)
     }
   }
+
+  enum class Action {
+    STOP, START, RESTART
+  }
+
+  fun start() {
+    val notification = NotificationCreator.create(
+      context = this.applicationContext,
+      channelId = AppNotification.BATTERY_LEVEL_MONITOR_CHANNEL_ID,
+      title = "Charging Monitor Active",
+      text = "Actively monitoring your charging status"
+    )
+
+    startForeground(AppNotification.Foreground.MONITOR_CHARGING_LEVEL_SERVICE_ID, notification)
+  }
+
+  fun stop() {
+    stopSelf()
+  }
+
+  fun restart() {
+    stop()
+
+    val serviceIntent = Intent(applicationContext, MonitorChargingLevelService::class.java)
+    serviceIntent.action = Action.START.toString() // Start action for the service
+    startService(serviceIntent)
+  }
+
 }

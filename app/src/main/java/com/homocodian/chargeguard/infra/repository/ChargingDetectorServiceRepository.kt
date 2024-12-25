@@ -21,6 +21,7 @@ class ChargingDetectorServiceRepository(
     Log.d(TAG, "start: Starting battery charging detector")
 
     Intent(appContext, MonitorChargingStatusService::class.java).also {
+      it.action = MonitorChargingStatusService.Action.START.toString()
       appContext.startService(it)
     }
   }
@@ -34,8 +35,8 @@ class ChargingDetectorServiceRepository(
     Log.d(TAG, "Stopping battery charging detector")
 
     Intent(appContext, MonitorChargingStatusService::class.java).also {
-      appContext.stopService(it)
+      it.action = MonitorChargingStatusService.Action.STOP.toString()
+      appContext.startService(it)
     }
   }
-
 }

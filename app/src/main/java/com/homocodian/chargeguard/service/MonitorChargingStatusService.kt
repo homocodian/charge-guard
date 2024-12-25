@@ -7,6 +7,8 @@ import android.os.IBinder
 import android.util.Log
 import com.homocodian.chargeguard.TAG
 import com.homocodian.chargeguard.broadcasts.PowerConnectionReceiver
+import com.homocodian.chargeguard.constant.AppNotification
+import com.homocodian.chargeguard.util.NotificationCreator
 import com.homocodian.chargeguard.util.isServiceRunning
 
 class MonitorChargingStatusService : Service() {
@@ -27,12 +29,6 @@ class MonitorChargingStatusService : Service() {
     registerReceiver(powerConnectionReceiver, connectionChangedIntent)
 
     powerConnectionReceiver.checkCurrentChargingState(this)
-
-    val intent = Intent(this.applicationContext.packageName + ".MESSAGE").apply {
-      putExtra("message", "Charging Detector started")
-      putExtra("duration_type", "short")
-    }
-    this.applicationContext.sendBroadcast(intent)
   }
 
   override fun onDestroy() {
@@ -43,13 +39,6 @@ class MonitorChargingStatusService : Service() {
     unregisterReceiver(powerConnectionReceiver)
 
     stopChargingLevelMonitoringService()
-
-    val intent = Intent(this.applicationContext.packageName + ".MESSAGE").apply {
-      putExtra("message", "Charging Detector Stopped")
-      putExtra("duration_type", "short")
-    }
-
-    this.applicationContext.sendBroadcast(intent)
   }
 
   override fun onBind(p0: Intent?): IBinder? {
@@ -57,6 +46,12 @@ class MonitorChargingStatusService : Service() {
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
+    when (intent?.action) {
+      MonitorChargingLevelService.Action.START.toString() -> start()
+      MonitorChargingLevelService.Action.STOP.toString() -> stop()
+    }
+
     return super.onStartCommand(intent, flags, startId)
   }
 
@@ -66,5 +61,24 @@ class MonitorChargingStatusService : Service() {
         stopService(it)
       }
     }
+  }
+
+  enum class Action {
+    START, STOP
+  }
+
+  fun start() {
+    val notification = NotificationCreator.create(
+      context = this.applicationContext,
+      channelId = AppNotification.BATTERY_POWER_CONNECTION_MONITOR_CHANNEL_ID,
+      title = "Charging Detector Active",
+      text = "Actively monitoring your power connection"
+    )
+
+    startForeground(AppNotification.Foreground.MONITOR_CHARGING_STATUS_SERVICE_ID, notification)
+  }
+
+  fun stop() {
+    stopSelf()
   }
 }

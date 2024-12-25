@@ -6,45 +6,64 @@ import android.content.pm.PackageManager
 import android.util.Log
 import com.homocodian.chargeguard.TAG
 import com.homocodian.chargeguard.broadcasts.BootReceiver
+import com.homocodian.chargeguard.service.MonitorChargingStatusService
+import com.homocodian.chargeguard.util.isServiceRunning
 
 class PowerConnectionServiceRepository(
   private val appContext: Application,
   private val chargingDetectorServiceRepository: ChargingDetectorServiceRepository
 ) {
 
-  init {
-    Log.d(TAG, "PowerConnectionServiceRepository class is initialized")
-  }
-
   fun start() {
-    val component = ComponentName(appContext, BootReceiver::class.java)
+    val isBootReceiverEnabled = isBootReceiverEnabled()
 
-    Log.d(TAG, "${appContext.packageManager.getComponentEnabledSetting(component)}")
+    Log.d(TAG, "start: isBootReceiverEnabled = $isBootReceiverEnabled")
 
-    appContext.packageManager
-      .setComponentEnabledSetting(
-        component, PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-        PackageManager.DONT_KILL_APP
-      )
+    if (!isBootReceiverEnabled) {
+      val component = ComponentName(appContext, BootReceiver::class.java)
 
-    Log.d(TAG, "${appContext.packageManager.getComponentEnabledSetting(component)}")
+      appContext.packageManager
+        .setComponentEnabledSetting(
+          component, PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+          PackageManager.DONT_KILL_APP
+        )
+
+      Log.d(TAG, "start: isBootReceiverEnabled = ${isBootReceiverEnabled()}")
+    }
 
     chargingDetectorServiceRepository.start()
   }
 
   fun stop() {
-    val component = ComponentName(appContext, BootReceiver::class.java)
 
-    Log.d(TAG, "${appContext.packageManager.getComponentEnabledSetting(component)}")
+    val isBootReceiverEnabled = isBootReceiverEnabled()
 
-    appContext.packageManager
-      .setComponentEnabledSetting(
-        component, PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-        PackageManager.DONT_KILL_APP
-      )
+    Log.d(TAG, "stop: isBootReceiverEnabled = $isBootReceiverEnabled")
 
-    Log.d(TAG, "${appContext.packageManager.getComponentEnabledSetting(component)}")
+    if (isBootReceiverEnabled) {
+      val component = ComponentName(appContext, BootReceiver::class.java)
+
+      appContext.packageManager
+        .setComponentEnabledSetting(
+          component, PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+          PackageManager.DONT_KILL_APP
+        )
+
+      Log.d(TAG, "stop: isBootReceiverEnabled = ${isBootReceiverEnabled()}")
+    }
 
     chargingDetectorServiceRepository.stop()
+  }
+
+  fun isPowerConnectionServiceRunning(): Boolean {
+    return isServiceRunning(appContext, MonitorChargingStatusService::class.java)
+  }
+
+  private fun isBootReceiverEnabled(): Boolean {
+    val packageManager = appContext.packageManager
+    val componentName = ComponentName(appContext, BootReceiver::class.java)
+
+    val state = packageManager.getComponentEnabledSetting(componentName)
+    return state == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
   }
 }

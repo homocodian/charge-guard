@@ -13,6 +13,7 @@ import com.homocodian.chargeguard.ChargingLimitReached
 import com.homocodian.chargeguard.R
 import com.homocodian.chargeguard.TAG
 import com.homocodian.chargeguard.constant.AppNotification
+import com.homocodian.chargeguard.constant.IntentCode
 import com.homocodian.chargeguard.util.helper.MediaPlayerHelper
 import com.homocodian.chargeguard.util.isNotificationShowing
 import kotlinx.coroutines.CoroutineScope
@@ -22,7 +23,8 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.minutes
 
-class ChargingLevelChangeReceiver(private val batteryChargingLevelToMonitor: Int) : BroadcastReceiver() {
+class ChargingLevelChangeReceiver(private val batteryChargingLevelToMonitor: Int) :
+  BroadcastReceiver() {
 
   private var job: Job? = null
   var isNotificationAlreadyShown = false
@@ -74,7 +76,12 @@ class ChargingLevelChangeReceiver(private val batteryChargingLevelToMonitor: Int
     }
 
     val stopPendingIntent: PendingIntent =
-      PendingIntent.getBroadcast(context, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE)
+      PendingIntent.getBroadcast(
+        context,
+        IntentCode.STOP_CHARGING_MONITOR,
+        stopIntent,
+        PendingIntent.FLAG_IMMUTABLE
+      )
 
     // Create the notification with a stop button
     val notification =
@@ -87,7 +94,7 @@ class ChargingLevelChangeReceiver(private val batteryChargingLevelToMonitor: Int
         .setAutoCancel(true)
         .setOngoing(true)
         .addAction(R.drawable.ic_launcher_background, "Stop", stopPendingIntent) // Stop button
-        .setTimeoutAfter(1.minutes.inWholeMilliseconds) // Auto cancel after 2 minutes
+        .setTimeoutAfter(1.minutes.inWholeMilliseconds) // Auto cancel after 1 minutes
         .setDeleteIntent(
           createOnDismissedIntent(
             context,
@@ -95,23 +102,18 @@ class ChargingLevelChangeReceiver(private val batteryChargingLevelToMonitor: Int
           )
         )
 
+    val fullScreenPendingIntent = PendingIntent.getActivity(
+      context,
+      IntentCode.FULL_SCREEN,
+      Intent(context, ChargingLimitReached::class.java),
+      PendingIntent.FLAG_IMMUTABLE
+    )
+
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
       if (notificationManager.canUseFullScreenIntent()) {
-        val fullScreenPendingIntent = PendingIntent.getActivity(
-          context,
-          0,
-          Intent(context, ChargingLimitReached::class.java),
-          PendingIntent.FLAG_IMMUTABLE
-        )
         notification.setFullScreenIntent(fullScreenPendingIntent, true)
       }
     } else {
-      val fullScreenPendingIntent = PendingIntent.getActivity(
-        context,
-        0,
-        Intent(context, ChargingLimitReached::class.java),
-        PendingIntent.FLAG_IMMUTABLE
-      )
       notification.setFullScreenIntent(fullScreenPendingIntent, true)
     }
 

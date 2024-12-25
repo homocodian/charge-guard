@@ -17,7 +17,7 @@ class ChargeGuardApp : Application() {
       val batteryLevelMonitorChannel = NotificationChannel(
         AppNotification.BATTERY_LEVEL_MONITOR_CHANNEL_ID,
         AppNotification.BATTERY_LEVEL_MONITOR_CHANNEL_NAME,
-        NotificationManager.IMPORTANCE_HIGH,
+        NotificationManager.IMPORTANCE_LOW,
       )
 
       val chargingLimitReachedChannel = NotificationChannel(
