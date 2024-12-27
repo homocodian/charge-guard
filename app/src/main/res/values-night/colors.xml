@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="splash_screen">#FFFFFF</color>
+    <color name="splash_screen">#FF000000</color>
 </resources>

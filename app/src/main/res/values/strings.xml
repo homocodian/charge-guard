@@ -1,4 +1,5 @@
 <resources>
-    <string name="app_name">ChargeGuard</string>
+    <string name="app_name">Charge Guard</string>
     <string name="title_activity_charging_limit_reached">ChargingLimitReached</string>
+    <string name="name_charging_service_toggle_tile">Charging Monitor</string>
 </resources>

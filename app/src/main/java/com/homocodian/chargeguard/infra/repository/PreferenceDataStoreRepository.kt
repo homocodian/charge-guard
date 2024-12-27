@@ -1,6 +1,7 @@
 package com.homocodian.chargeguard.infra.repository
 
 import android.app.Application
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import com.homocodian.chargeguard.dataStore
@@ -22,7 +23,23 @@ class PreferenceDataStoreRepository(
   override suspend fun getInt(key: String): Int? {
     val key = intPreferencesKey(key)
 
-    val preference = appContext.dataStore.data.first();
+    val preference = appContext.dataStore.data.first()
+
+    return preference[key]
+  }
+
+  override suspend fun putBoolean(key: String, value: Boolean) {
+    val key = booleanPreferencesKey(key)
+
+    appContext.dataStore.edit { preference ->
+      preference[key] = value
+    }
+  }
+
+  override suspend fun getBoolean(key: String): Boolean? {
+    val key = booleanPreferencesKey(key)
+
+    val preference = appContext.dataStore.data.first()
 
     return preference[key]
   }

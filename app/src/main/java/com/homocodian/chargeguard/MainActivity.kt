@@ -69,7 +69,7 @@ class MainActivity : ComponentActivity() {
               homeViewModel.startChargingDetector()
             }
 
-            StopMonitoringBatteryChargingLevel(homeViewModel = homeViewModel) {
+            StopMonitoringBatteryChargingLevel {
               homeViewModel.stopChargingServiceDetector()
             }
           }

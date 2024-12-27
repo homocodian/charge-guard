@@ -2,10 +2,8 @@ package com.homocodian.chargeguard.ui.viewmodel
 
 import android.Manifest
 import android.app.Application
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import android.os.PowerManager
 import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -14,9 +12,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.homocodian.chargeguard.TAG
 import com.homocodian.chargeguard.constant.BatteryLevel
-import com.homocodian.chargeguard.infra.repository.ChargingLevelDetectorServiceRepository
+import com.homocodian.chargeguard.infra.repository.ChargingLevelServiceRepository
 import com.homocodian.chargeguard.infra.repository.PowerConnectionServiceRepository
 import com.homocodian.chargeguard.infra.repository.PreferenceDataStoreRepository
+import com.homocodian.chargeguard.store.ChargingStatusServiceState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -31,9 +30,9 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
   private val savedStateHandle: SavedStateHandle,
-  private val appContext: Application,
+  private val applicationContext: Application,
   private val powerConnectionServiceRepository: PowerConnectionServiceRepository,
-  private val chargingLevelDetectorServiceRepository: ChargingLevelDetectorServiceRepository,
+  private val chargingLevelServiceRepository: ChargingLevelServiceRepository,
   private val preferenceDataStoreRepository: PreferenceDataStoreRepository
 ) : ViewModel() {
 
@@ -42,10 +41,6 @@ class HomeViewModel @Inject constructor(
 
   private val _event = MutableSharedFlow<ScreenEvents>()
   val event = _event.asSharedFlow()
-
-  val isDetectorServiceRunning = savedStateHandle.getStateFlow(
-    key = "isDetectorServiceRunning", initialValue = true
-  )
 
   val batteryPercentageToMonitor = savedStateHandle.getStateFlow(
     key = "batteryPercentageToMonitor", initialValue = BatteryLevel.DEFAULT_BATTERY_LEVEL_TO_MONITOR
@@ -63,10 +58,6 @@ class HomeViewModel @Inject constructor(
   }
 
   private val lastBatteryPercentageSaved = MutableStateFlow<Int?>(null)
-
-  val isIgnoringBatteryOptimizations = savedStateHandle.getStateFlow(
-    key = "isIgnoringBatteryOptimizations", initialValue = false
-  )
 
   val hasNotificationPermission = savedStateHandle.getStateFlow(
     key = "hasNotificationPermission", initialValue = false
@@ -94,10 +85,10 @@ class HomeViewModel @Inject constructor(
         )
 
         withContext(Dispatchers.Main) {
-          if (isDetectorServiceRunning.value) {
+          if (ChargingStatusServiceState.state.value) {
             _event.emit(ScreenEvents.ShowToast("You will be notified when the battery reaches ${batteryPercentageToMonitor.value}%"))
           }
-          chargingLevelDetectorServiceRepository.restartIfRunning()
+          chargingLevelServiceRepository.restartIfRunning()
         }
 
       } catch (_: Exception) {
@@ -146,13 +137,7 @@ class HomeViewModel @Inject constructor(
     savedStateHandle["hasNotificationPermission"] = state
   }
 
-  fun setIsIgnoringBatteryOptimizations(state: Boolean) {
-    savedStateHandle["isIgnoringBatteryOptimizations"] = state
-  }
-
   fun startChargingDetector() {
-    savedStateHandle["isDetectorServiceRunning"] = true
-
     viewModelScope.launch {
       powerConnectionServiceRepository.start()
       _event.emit(ScreenEvents.ShowToast("Charging detection is now active"))
@@ -160,8 +145,6 @@ class HomeViewModel @Inject constructor(
   }
 
   fun stopChargingServiceDetector() {
-    savedStateHandle["isDetectorServiceRunning"] = false
-
     viewModelScope.launch {
       powerConnectionServiceRepository.stop()
       _event.emit(ScreenEvents.ShowToast("Battery charging detection is now inactive"))
@@ -183,23 +166,13 @@ class HomeViewModel @Inject constructor(
     viewModelScope.launch {
       val isServiceRunning = powerConnectionServiceRepository.isPowerConnectionServiceRunning()
       Log.d(TAG, "Init isServiceRunning: $isServiceRunning")
-      savedStateHandle["isDetectorServiceRunning"] = isServiceRunning
-    }
-
-    viewModelScope.launch {
-      val isIgnoring =
-        (appContext.getSystemService(Context.POWER_SERVICE) as PowerManager).isIgnoringBatteryOptimizations(
-          appContext.packageName
-        )
-
-      savedStateHandle["isIgnoringBatteryOptimizations"] = isIgnoring
-      Log.d(TAG, "init isIgnoring battery optimizations: $isIgnoring")
+      ChargingStatusServiceState.setState(isServiceRunning)
     }
 
     viewModelScope.launch {
       val hasNotificationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         ContextCompat.checkSelfPermission(
-          appContext, Manifest.permission.POST_NOTIFICATIONS
+          applicationContext, Manifest.permission.POST_NOTIFICATIONS
         ) == PackageManager.PERMISSION_GRANTED
       } else {
         true

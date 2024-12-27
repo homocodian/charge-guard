@@ -1,8 +1,8 @@
 package com.homocodian.chargeguard.di
 
 import android.app.Application
-import com.homocodian.chargeguard.infra.repository.ChargingDetectorServiceRepository
-import com.homocodian.chargeguard.infra.repository.ChargingLevelDetectorServiceRepository
+import com.homocodian.chargeguard.infra.repository.ChargingStatusServiceRepository
+import com.homocodian.chargeguard.infra.repository.ChargingLevelServiceRepository
 import com.homocodian.chargeguard.infra.repository.PowerConnectionServiceRepository
 import dagger.Module
 import dagger.Provides
@@ -16,23 +16,23 @@ object ServiceRepositoryModule {
 
   @Provides
   @Singleton
-  fun providesChargingDetectorServiceRepository(appContext: Application): ChargingDetectorServiceRepository {
-    return ChargingDetectorServiceRepository(appContext)
+  fun providesChargingDetectorServiceRepository(appContext: Application): ChargingStatusServiceRepository {
+    return ChargingStatusServiceRepository(appContext)
   }
 
   @Provides
   @Singleton
-  fun providesChargingLevelDetectorServiceRepository(appContext: Application): ChargingLevelDetectorServiceRepository {
-    return ChargingLevelDetectorServiceRepository(appContext)
+  fun providesChargingLevelDetectorServiceRepository(appContext: Application): ChargingLevelServiceRepository {
+    return ChargingLevelServiceRepository(appContext)
   }
 
   @Provides
   @Singleton
   fun providesPowerConnectionServiceRepository(
     appContext: Application,
-    chargingDetectorServiceRepository: ChargingDetectorServiceRepository
+    chargingStatusServiceRepository: ChargingStatusServiceRepository
   ): PowerConnectionServiceRepository {
-    return PowerConnectionServiceRepository(appContext, chargingDetectorServiceRepository)
+    return PowerConnectionServiceRepository(appContext, chargingStatusServiceRepository)
   }
 
 }

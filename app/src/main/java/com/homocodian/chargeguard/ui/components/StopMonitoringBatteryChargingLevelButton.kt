@@ -5,14 +5,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.homocodian.chargeguard.ui.viewmodel.HomeViewModel
+import com.homocodian.chargeguard.store.ChargingStatusServiceState
 
 @Composable
 fun StopMonitoringBatteryChargingLevel(
-  homeViewModel: HomeViewModel,
-  onClick: () -> Unit) {
-
-  val isServiceRunning by homeViewModel.isDetectorServiceRunning.collectAsStateWithLifecycle()
+  onClick: () -> Unit
+) {
+  val isServiceRunning by ChargingStatusServiceState.state.collectAsStateWithLifecycle()
 
   Button(
     enabled = isServiceRunning,

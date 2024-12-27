@@ -5,7 +5,6 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
@@ -52,11 +51,38 @@
             android:name=".broadcasts.NotificationDismissedReceiver"
             android:exported="false" />
 
-        <service android:name=".service.MonitorChargingLevelService" android:enabled="true" android:foregroundServiceType="specialUse">
-            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Used for monitoring charging level state of the device." />
+        <service
+            android:name=".service.MonitorChargingLevelService"
+            android:enabled="true"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Used for monitoring charging level state of the device." />
         </service>
-        <service android:name=".service.MonitorChargingStatusService" android:enabled="true" android:foregroundServiceType="specialUse">
-            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Used for monitoring power connection state of the device." />
+
+        <service
+            android:name=".service.MonitorChargingStatusService"
+            android:enabled="true"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Used for monitoring power connection state of the device." />
+        </service>
+
+        <service
+            android:name=".service.ChargingDetectorQSTileService"
+            android:exported="true"
+            android:icon="@drawable/battery_change_24px"
+            android:label="@string/name_charging_service_toggle_tile"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.ACTIVE_TILE"
+                android:value="true" />
+            <meta-data android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
         </service>
 
     </application>

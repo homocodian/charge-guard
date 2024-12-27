@@ -11,7 +11,7 @@ import com.homocodian.chargeguard.util.isServiceRunning
 
 class PowerConnectionServiceRepository(
   private val appContext: Application,
-  private val chargingDetectorServiceRepository: ChargingDetectorServiceRepository
+  private val chargingStatusServiceRepository: ChargingStatusServiceRepository
 ) {
 
   fun start() {
@@ -31,7 +31,7 @@ class PowerConnectionServiceRepository(
       Log.d(TAG, "start: isBootReceiverEnabled = ${isBootReceiverEnabled()}")
     }
 
-    chargingDetectorServiceRepository.start()
+    chargingStatusServiceRepository.requestStart()
   }
 
   fun stop() {
@@ -52,7 +52,7 @@ class PowerConnectionServiceRepository(
       Log.d(TAG, "stop: isBootReceiverEnabled = ${isBootReceiverEnabled()}")
     }
 
-    chargingDetectorServiceRepository.stop()
+    chargingStatusServiceRepository.requestStop()
   }
 
   fun isPowerConnectionServiceRunning(): Boolean {

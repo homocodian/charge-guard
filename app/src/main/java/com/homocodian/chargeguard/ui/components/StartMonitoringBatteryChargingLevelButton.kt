@@ -2,14 +2,8 @@ package com.homocodian.chargeguard.ui.components
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.os.Build
-import android.os.PowerManager
-import android.provider.Settings
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.Button
@@ -20,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.homocodian.chargeguard.TAG
+import com.homocodian.chargeguard.store.ChargingStatusServiceState
 import com.homocodian.chargeguard.ui.viewmodel.HomeViewModel
 import com.homocodian.chargeguard.util.findActivity
 import com.homocodian.chargeguard.util.openAppSettings
@@ -33,18 +28,15 @@ fun StartMonitoringBatteryChargingLevelButton(
   val context = LocalContext.current
 
   val hasNotificationPermission by
-    homeViewModel.hasNotificationPermission.collectAsStateWithLifecycle()
-
-  val isIgnoringBatteryOptimizations by
-    homeViewModel.isIgnoringBatteryOptimizations.collectAsStateWithLifecycle()
+  homeViewModel.hasNotificationPermission.collectAsStateWithLifecycle()
 
   val shouldShowNotificationStatusAlertDialog by
-    homeViewModel.shouldShowNotificationStatusAlertDialog.collectAsStateWithLifecycle()
+  homeViewModel.shouldShowNotificationStatusAlertDialog.collectAsStateWithLifecycle()
 
   val notificationPermissionAskCount by
-    homeViewModel.notificationPermissionAskCount.collectAsStateWithLifecycle()
+  homeViewModel.notificationPermissionAskCount.collectAsStateWithLifecycle()
 
-  val isServiceRunning by homeViewModel.isDetectorServiceRunning.collectAsStateWithLifecycle()
+  val isServiceRunning by ChargingStatusServiceState.state.collectAsStateWithLifecycle()
 
   val notificationPermissionResultLauncher =
     rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission(),
@@ -58,66 +50,40 @@ fun StartMonitoringBatteryChargingLevelButton(
         // ELSE IT WILL SHOW RATIONAL DIALOG JUST AFTER
         // DECLINING SECOND PERMISSION REQUEST
         // WHICH IS NOT A GOOD UX
+        // if notification permission rejected 2 times
+        // show alert dialog to manually give permission on third request
         homeViewModel.shouldShowRational()
         homeViewModel.increaseNotificationPermissionAskCount()
       })
 
-  val launcher = rememberLauncherForActivityResult(
-    contract = ActivityResultContracts.StartActivityForResult()
-  ) { result ->
-    val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-    val isIgnoringBatteryOptimizations = powerManager.isIgnoringBatteryOptimizations(context.packageName)
-
-    if (isIgnoringBatteryOptimizations) {
-      Log.d(TAG, "Battery optimization ignored.")
-      homeViewModel.setIsIgnoringBatteryOptimizations(true)
-    } else {
-      Log.d(TAG, "Battery optimization not ignored.")
-      homeViewModel.setIsIgnoringBatteryOptimizations(false)
-    }
-  }
-
   Button(
-    enabled = !isServiceRunning,
+    enabled = !(isServiceRunning),
     onClick = {
-    when {
-      !(isIgnoringBatteryOptimizations) -> {
-        Toast.makeText(
-          context,
-          "Ignore this application from battery optimization",
-          Toast.LENGTH_LONG
-        ).show()
-        val intent = Intent().apply {
-          action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
-          data = Uri.parse("package:" + context.packageName)
+      when {
+        hasNotificationPermission -> {
+          Log.d(TAG, "StartMonitoringBatteryChargingLevelButton: onclick")
+          onClick()
         }
-        launcher.launch(intent)
-      }
 
-      hasNotificationPermission -> {
-        Log.d(TAG, "StartMonitoringBatteryChargingLevelButton: onclick")
-        onClick()
-      }
+        shouldShowRequestPermissionRationale(
+          context.findActivity(), Manifest.permission.POST_NOTIFICATIONS
+        ) -> {
+          homeViewModel.setShouldShowNotificationStatsAlertDialog(true)
+        }
 
-      shouldShowRequestPermissionRationale(
-        context.findActivity(), Manifest.permission.POST_NOTIFICATIONS
-      ) -> {
-        homeViewModel.setShouldShowNotificationStatsAlertDialog(true)
-      }
-
-      else -> {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-          notificationPermissionResultLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        else -> {
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermissionResultLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+          }
         }
       }
-    }
-  }) {
+    }) {
     Text("Start")
   }
 
   if (shouldShowNotificationStatusAlertDialog) {
     PermissionDialog(permissionTextProvider = NotificationPermissionTextProvider(),
-      isPermanentlyDeclined = notificationPermissionAskCount >=2 && !hasNotificationPermission,
+      isPermanentlyDeclined = notificationPermissionAskCount >= 2 && !hasNotificationPermission,
       onDismiss = {
         homeViewModel.setShouldShowNotificationStatsAlertDialog(false)
       },
@@ -125,7 +91,7 @@ fun StartMonitoringBatteryChargingLevelButton(
         homeViewModel.setShouldShowNotificationStatsAlertDialog(false)
         if (notificationPermissionAskCount >= 2) {
           context.findActivity().openAppSettings()
-        }else{
+        } else {
           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             notificationPermissionResultLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
           }
