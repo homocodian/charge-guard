@@ -4,30 +4,24 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.homocodian.chargeguard.ui.viewmodel.HomeViewModel
 import kotlin.math.roundToInt
 
 @Composable
 fun BatteryPercentageSelectorSlider(
-  homeViewModel: HomeViewModel
+  value: Int,
+  onValueChange: (Int) -> Unit,
+  onValueChangeFinished: () -> Unit
 ) {
-
-  val batteryPercentageToMonitor by
-  homeViewModel.batteryPercentageToMonitor.collectAsStateWithLifecycle()
-
   Column {
-    Text(text = "${batteryPercentageToMonitor}%")
+    Text(text = "${value}%")
     Slider(
-      value = batteryPercentageToMonitor.toFloat(), onValueChange = {
+      value = value.toFloat(),
+      onValueChange = {
         if (it >= 50f) {
-          homeViewModel.setBatteryPercentageToMonitor(it.roundToInt())
+          onValueChange(it.roundToInt())
         }
       },
-      onValueChangeFinished = {
-        homeViewModel.saveBatteryPercentageToMonitor()
-      },
+      onValueChangeFinished = onValueChangeFinished,
       valueRange = 0f..100f
     )
   }

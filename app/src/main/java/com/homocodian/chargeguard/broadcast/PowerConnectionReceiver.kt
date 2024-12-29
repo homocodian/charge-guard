@@ -1,4 +1,4 @@
-package com.homocodian.chargeguard.broadcasts
+package com.homocodian.chargeguard.broadcast
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -7,49 +7,38 @@ import android.content.IntentFilter
 import android.os.BatteryManager
 import android.util.Log
 import com.homocodian.chargeguard.TAG
-import com.homocodian.chargeguard.service.MonitorChargingLevelService
-import com.homocodian.chargeguard.util.isServiceRunning
+import com.homocodian.chargeguard.infrastructure.repository.ChargingLevelServiceRepository
+import com.homocodian.chargeguard.service.ChargingLevelService
+import javax.inject.Inject
 
 class PowerConnectionReceiver : BroadcastReceiver() {
+
+  @Inject
+  lateinit var chargingLevelServiceRepository: ChargingLevelServiceRepository
 
   override fun onReceive(context: Context, intent: Intent) {
     when {
       intent.action == Intent.ACTION_POWER_CONNECTED ->
-        powerWasConnected(context)
+        powerWasConnected(context.applicationContext)
 
       intent.action == Intent.ACTION_POWER_DISCONNECTED ->
-        powerWasDisconnected(context)
+        powerWasDisconnected(context.applicationContext)
     }
   }
 
   private fun powerWasConnected(context: Context) {
     // Do whatever you need to do when the power is connected here
     Log.d(TAG, "powerWasConnected ")
-
-    if (!isServiceRunning(context, MonitorChargingLevelService::class.java)) {
-      Log.d(TAG, "Starting MonitorChargingLevelService")
-
-      Intent(context.applicationContext, MonitorChargingLevelService::class.java).also {
-        it.action = MonitorChargingLevelService.Action.START.toString()
-        context.startService(it)
-      }
-    } else {
-      Log.d(TAG, "powerWasConnected : MonitorChargingLevelService already running")
+    Intent(context, ChargingLevelService::class.java).also {
+      context.startService(it)
     }
   }
 
   private fun powerWasDisconnected(context: Context) {
     // And here, do whatever you like when the power is disconnected
     Log.d(TAG, "powerWasDisconnected")
-    if (isServiceRunning(context, MonitorChargingLevelService::class.java)) {
-      Log.d(TAG, "Stopping MonitorChargingLevelService")
-
-      Intent(context.applicationContext, MonitorChargingLevelService::class.java).also {
-        it.action = MonitorChargingLevelService.Action.STOP.toString()
-        context.startService(it)
-      }
-    } else {
-      Log.d(TAG, "powerWasDisconnected: MonitorChargingLevelService already stopped")
+    Intent(context, ChargingLevelService::class.java).also {
+      context.stopService(it)
     }
   }
 

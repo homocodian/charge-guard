@@ -31,7 +31,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.homocodian.chargeguard.broadcasts.NotificationDismissedReceiver
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import com.homocodian.chargeguard.broadcast.NotificationDismissedReceiver
 import com.homocodian.chargeguard.ui.theme.ChargeGuardTheme
 
 class ChargingLimitReached : ComponentActivity() {
@@ -46,8 +48,8 @@ class ChargingLimitReached : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    showWhenLockedAndTurnScreenOn()
     enableEdgeToEdge()
+    showWhenLockedAndTurnScreenOn()
 
     val filter = IntentFilter()
     filter.addAction(this.packageName + ".FINISH_ACTIVITY")
@@ -65,6 +67,8 @@ class ChargingLimitReached : ComponentActivity() {
         }
       }
     }
+
+    hideNavbar()
   }
 
   override fun onDestroy() {
@@ -73,11 +77,20 @@ class ChargingLimitReached : ComponentActivity() {
     unregisterReceiver(finishReceiver)
   }
 
+  override fun onWindowFocusChanged(hasFocus: Boolean) {
+    super.onWindowFocusChanged(hasFocus)
+    if (hasFocus) {
+      hideNavbar()
+    }
+  }
+
   private fun showWhenLockedAndTurnScreenOn() {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O_MR1) {
+      Log.d("ActivityDebug", "Using setShowWhenLocked and setTurnScreenOn")
       setShowWhenLocked(true)
       setTurnScreenOn(true)
     } else {
+      Log.d("ActivityDebug", "Using Window Flags")
       @Suppress("DEPRECATION")
       window.addFlags(
         WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
@@ -86,6 +99,11 @@ class ChargingLimitReached : ComponentActivity() {
     }
   }
 
+  private fun hideNavbar() {
+    WindowCompat.getInsetsController(window, window.decorView).apply {
+      hide(WindowInsetsCompat.Type.navigationBars())
+    }
+  }
 }
 
 @Composable

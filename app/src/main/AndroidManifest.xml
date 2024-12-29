@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 
     <application
         android:name=".ChargeGuardApp"
@@ -39,20 +40,21 @@
             android:theme="@style/Theme.ChargeGuard" />
 
         <receiver
-            android:name=".broadcasts.BootReceiver"
+            android:name=".broadcast.BootReceiver"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
             </intent-filter>
         </receiver>
 
         <receiver
-            android:name=".broadcasts.NotificationDismissedReceiver"
+            android:name=".broadcast.NotificationDismissedReceiver"
             android:exported="false" />
 
         <service
-            android:name=".service.MonitorChargingLevelService"
+            android:name=".service.ChargingLevelService"
             android:enabled="true"
             android:foregroundServiceType="specialUse">
             <property
@@ -61,7 +63,7 @@
         </service>
 
         <service
-            android:name=".service.MonitorChargingStatusService"
+            android:name=".service.PowerConnectionService"
             android:enabled="true"
             android:foregroundServiceType="specialUse">
             <property
@@ -70,7 +72,7 @@
         </service>
 
         <service
-            android:name=".service.ChargingDetectorQSTileService"
+            android:name=".service.ChargingMonitorTileService"
             android:exported="true"
             android:icon="@drawable/battery_change_24px"
             android:label="@string/name_charging_service_toggle_tile"
@@ -78,10 +80,9 @@
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
-            <meta-data
-                android:name="android.service.quicksettings.ACTIVE_TILE"
-                android:value="true" />
             <meta-data android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+            <meta-data android:name="android.service.quicksettings.ACTIVE_TILE"
                 android:value="true" />
         </service>
 

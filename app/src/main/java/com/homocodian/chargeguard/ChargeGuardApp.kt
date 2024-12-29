@@ -12,13 +12,24 @@ import dagger.hilt.android.HiltAndroidApp
 class ChargeGuardApp : Application() {
   override fun onCreate() {
     super.onCreate()
+    
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
       val batteryLevelMonitorChannel = NotificationChannel(
-        AppNotification.BATTERY_LEVEL_MONITOR_CHANNEL_ID,
-        AppNotification.BATTERY_LEVEL_MONITOR_CHANNEL_NAME,
+        AppNotification.CHARGING_LEVEL_MONITOR_CHANNEL_ID,
+        AppNotification.CHARGING_LEVEL_MONITOR_CHANNEL_NAME,
         NotificationManager.IMPORTANCE_LOW,
-      )
+      ).apply {
+        description = AppNotification.BATTERY_LEVEL_MONITOR_CHANNEL_DESCRIPTION
+      }
+
+      val powerConnectionMonitorChannel = NotificationChannel(
+        AppNotification.POWER_CONNECTION_MONITOR_CHANNEL_ID,
+        AppNotification.POWER_CONNECTION_MONITOR_CHANNEL_NAME,
+        NotificationManager.IMPORTANCE_LOW,
+      ).apply {
+        description = AppNotification.POWER_CONNECTION_MONITOR_CHANNEL_DESCRIPTION
+      }
 
       val chargingLimitReachedChannel = NotificationChannel(
         AppNotification.CHARGING_LIMIT_REACHED_CHANNEL_ID,
@@ -34,6 +45,7 @@ class ChargeGuardApp : Application() {
 
       notificationManger.createNotificationChannels(
         listOf(
+          powerConnectionMonitorChannel,
           batteryLevelMonitorChannel,
           chargingLimitReachedChannel
         )
